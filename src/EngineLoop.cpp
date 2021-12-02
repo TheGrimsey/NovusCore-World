@@ -31,9 +31,22 @@
 #include <Gameplay/ECS/Components/Transform.h>
 #include <Gameplay/ECS/Components/GameEntity.h>
 
+#ifdef WIN32
+#include "Winsock.h"
+#endif
+
 EngineLoop::EngineLoop()
     : _isRunning(false), _inputQueue(256), _outputQueue(16)
 {
+#ifdef WIN32
+    WSADATA data;
+    i32 code = WSAStartup(MAKEWORD(2, 2), &data);
+    if (code != 0)
+    {
+        DebugHandler::PrintFatal("[Network] Failed to initialize WinSock");
+    }
+#endif
+
     _network.client = std::make_shared<NetClient>();
     _network.client->Init(NetSocket::Mode::TCP);
 
