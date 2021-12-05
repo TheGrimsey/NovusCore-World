@@ -26,7 +26,7 @@ void UpdateEntityPositionSystem::Update(entt::registry& registry)
 
         std::vector<Point2D> playersWithinDistance;
         Tree2D& entityTress = mapSingleton.GetPlayerTree();
-        if (!entityTress.GetWithinDistance({transform.position.x, transform.position.y}, 30.f, entity, playersWithinDistance))
+        if (!entityTress.GetWithinDistance({transform.position.x, transform.position.y}, 500.f, entity, playersWithinDistance))
             return;
 
         std::vector<entt::entity>& seenEntities = gameEntity.seenEntities;

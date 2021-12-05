@@ -80,6 +80,8 @@ private:
 
     void SetupUpdateFramework();
     void SetMessageHandler();
+
+    void LoadBasicCreatureDataFromDB();
 private:
     bool _isRunning;
 

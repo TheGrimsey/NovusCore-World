@@ -129,15 +129,7 @@ void EngineLoop::Run()
         DebugHandler::PrintFatal("Network : Failed to initialize server (NovusCore - World)");
     }
 
-    for (u32 i = 0; i < 1000; i++)
-    {
-        entt::entity entityID = _updateFramework.gameRegistry.create();
-        Transform& transform = _updateFramework.gameRegistry.emplace<Transform>(entityID);
-
-        transform.position += vec3((i % 100) * 5.0f, (i / 100) * 5.0f, 0);
-        GameEntity& gameEntity = _updateFramework.gameRegistry.emplace<GameEntity>(entityID, GameEntity::Type::Creature, 29344);
-        _updateFramework.gameRegistry.emplace<TransformIsDirty>(entityID);
-    }
+    LoadBasicCreatureDataFromDB();
 
     Timer timer;
     f32 targetDelta = 1.0f / 30.0f;
@@ -272,6 +264,54 @@ void EngineLoop::SetMessageHandler()
     ServiceLocator::SetClientNetPacketHandler(clientNetPacketHandler);
     Client::AuthHandlers::Setup(clientNetPacketHandler);
     Client::GeneralHandlers::Setup(clientNetPacketHandler);
+}
+void EngineLoop::LoadBasicCreatureDataFromDB()
+{
+    DBSingleton& dbSingleton = _updateFramework.gameRegistry.ctx<DBSingleton>();
+
+    std::string query = "SELECT * FROM creatures;"; 
+    
+    std::shared_ptr<QueryResult> result = dbSingleton.auth.Query(query);
+
+    u64 numAffectedRows = result->GetAffectedRows();
+    DebugHandler::PrintSuccess("Spawning creatures...");
+
+    if (numAffectedRows != 0)
+    {
+        while (result->GetNextRow())
+        {
+            //const Field& idField = result->GetField(0);
+            const Field& entryField = result->GetField(1);
+            const Field& nameField = result->GetField(2);
+            const Field& subNameField = result->GetField(3);
+            const Field& displayIDField = result->GetField(4);
+            const Field& scaleField = result->GetField(5);
+            const Field& positionXField = result->GetField(6);
+            const Field& positionYField = result->GetField(7);
+            const Field& positionZField = result->GetField(8);
+            const Field& orientationField = result->GetField(9);
+
+            u32 entry = entryField.GetU32();
+            std::string name = nameField.GetString();
+            std::string subName = subNameField.GetString();
+            u32 displayID = displayIDField.GetU32();
+            f32 scale = scaleField.GetF32();
+            vec3 position = vec3(positionXField.GetF32(), positionYField.GetF32(), positionZField.GetF32());
+            f32 orientation = orientationField.GetF32();
+
+            entt::entity entityID = _updateFramework.gameRegistry.create();
+            Transform& transform = _updateFramework.gameRegistry.emplace<Transform>(entityID);
+
+            transform.position = position;
+            transform.scale *= scale;
+            transform.rotation.z = glm::degrees(orientation);
+
+            GameEntity& gameEntity = _updateFramework.gameRegistry.emplace<GameEntity>(entityID, GameEntity::Type::Creature, displayID);
+            _updateFramework.gameRegistry.emplace<TransformIsDirty>(entityID);
+        }
+    }
+
+    DebugHandler::PrintSuccess("Spawned %u creatures.", numAffectedRows);
 }
 void EngineLoop::UpdateSystems()
 {
