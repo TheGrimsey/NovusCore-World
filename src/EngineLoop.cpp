@@ -6,9 +6,10 @@
 #include <tracy/Tracy.hpp>
 
 // Component Singletons
+#include "ECS/Components/Singletons/DBSingleton.h"
 #include "ECS/Components/Singletons/TimeSingleton.h"
 #include "ECS/Components/Singletons/MapSingleton.h"
-#include "ECS/Components/Singletons/DBSingleton.h"
+#include "ECS/Components/Singletons/TeleportSingleton.h"
 #include "ECS/Components/Network/ConnectionSingleton.h"
 #include "ECS/Components/Network/ConnectionDeferredSingleton.h"
 #include "ECS/Components/Network/AuthenticationSingleton.h"
@@ -99,15 +100,6 @@ void EngineLoop::Run()
     _isRunning = true;
 
     SetupUpdateFramework();
-    
-    /*Point2D points[] = {{0, 10}, {10, 0}, {5, 5}, {10, 10}, {25, 25}, {75, 75}, {150, 150}, {250, 250}, {500, 500}};
-    Tree2D tree(std::begin(points), std::end(points));
-
-    Point2D closestPoint = { 0, 0 };
-    if (tree.GetNearest(closestPoint, closestPoint))
-    {
-        volatile i32 test = 5;
-    }*/
 
     DBSingleton& dbSingleton = _updateFramework.gameRegistry.set<DBSingleton>();
     dbSingleton.auth.Connect("localhost", 3306, "root", "ascent", "novuscore", 0);
@@ -129,7 +121,7 @@ void EngineLoop::Run()
         DebugHandler::PrintFatal("Network : Failed to initialize server (NovusCore - World)");
     }
 
-    LoadBasicCreatureDataFromDB();
+    LoadDataFromDB();
 
     Timer timer;
     f32 targetDelta = 1.0f / 30.0f;
@@ -265,16 +257,21 @@ void EngineLoop::SetMessageHandler()
     Client::AuthHandlers::Setup(clientNetPacketHandler);
     Client::GeneralHandlers::Setup(clientNetPacketHandler);
 }
-void EngineLoop::LoadBasicCreatureDataFromDB()
+void EngineLoop::LoadDataFromDB()
+{
+    LoadCreatureDataFromDB();
+    LoadTeleportLocationsFromDB();
+}
+void EngineLoop::LoadCreatureDataFromDB()
 {
     DBSingleton& dbSingleton = _updateFramework.gameRegistry.ctx<DBSingleton>();
 
-    std::string query = "SELECT * FROM creatures;"; 
-    
+    std::string query = "SELECT * FROM creatures;";
+
     std::shared_ptr<QueryResult> result = dbSingleton.auth.Query(query);
 
     u64 numAffectedRows = result->GetAffectedRows();
-    DebugHandler::PrintSuccess("Spawning creatures...");
+    DebugHandler::PrintSuccess("Fetching Creatures...");
 
     if (numAffectedRows != 0)
     {
@@ -311,8 +308,46 @@ void EngineLoop::LoadBasicCreatureDataFromDB()
         }
     }
 
-    DebugHandler::PrintSuccess("Spawned %u creatures.", numAffectedRows);
+    DebugHandler::PrintSuccess("Added %u Creatures.", numAffectedRows);
 }
+void EngineLoop::LoadTeleportLocationsFromDB()
+{
+    DBSingleton& dbSingleton = _updateFramework.gameRegistry.ctx<DBSingleton>();
+    TeleportSingleton& teleportSingleton = _updateFramework.gameRegistry.set<TeleportSingleton>();
+
+    std::string query = "SELECT * FROM teleportlocations;";
+
+    std::shared_ptr<QueryResult> result = dbSingleton.auth.Query(query);
+
+    u64 numAffectedRows = result->GetAffectedRows();
+    DebugHandler::PrintSuccess("Fetching Teleport Locations...");
+
+    if (numAffectedRows != 0)
+    {
+        while (result->GetNextRow())
+        {
+            //const Field& idField = result->GetField(0);
+            const Field& nameField = result->GetField(1);
+            const Field& mapIdField = result->GetField(2);
+            const Field& positionXField = result->GetField(3);
+            const Field& positionYField = result->GetField(4);
+            const Field& positionZField = result->GetField(5);
+            const Field& orientationField = result->GetField(6);
+
+            TeleportLocation teleportLocation;
+            teleportLocation.name = nameField.GetString();
+            teleportLocation.mapId = mapIdField.GetU32();
+            teleportLocation.position = vec3(positionXField.GetF32(), positionYField.GetF32(), positionZField.GetF32());
+            teleportLocation.orientation = orientationField.GetF32();
+
+            u32 nameHash = StringUtils::fnv1a_32(teleportLocation.name.c_str(), teleportLocation.name.length());
+            teleportSingleton.nameHashToLocation[nameHash] = teleportLocation;
+        }
+    }
+
+    DebugHandler::PrintSuccess("Added %u Teleport Locations.", numAffectedRows);
+}
+
 void EngineLoop::UpdateSystems()
 {
     ZoneScopedNC("UpdateSystems", tracy::Color::Blue2)

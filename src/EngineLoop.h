@@ -81,7 +81,9 @@ private:
     void SetupUpdateFramework();
     void SetMessageHandler();
 
-    void LoadBasicCreatureDataFromDB();
+    void LoadDataFromDB();
+    void LoadCreatureDataFromDB();
+    void LoadTeleportLocationsFromDB();
 private:
     bool _isRunning;
 
