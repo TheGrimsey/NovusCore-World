@@ -15,6 +15,8 @@
 #include <Gameplay/Network/PacketWriter.h>
 #include <Gameplay/ECS/Components/Transform.h>
 #include <Gameplay/ECS/Components/GameEntity.h>
+#include <Gameplay/ECS/Components/GameEntityPlayerFlag.h>
+#include <Gameplay/ECS/Components/EntityResources.h>
 
 void SpawnPlayerSystem::Update(entt::registry& registry)
 {
@@ -42,9 +44,18 @@ void SpawnPlayerSystem::Update(entt::registry& registry)
             Transform& transform = registry.emplace<Transform>(entityID);
             GameEntity& gameEntity = registry.emplace<GameEntity>(entityID, GameEntity::Type::Player, 29344);
             registry.emplace<TransformIsDirty>(entityID);
+            registry.emplace<GameEntityPlayerFlag>(entityID);
+            EntityResources& resources = registry.emplace<EntityResources>(entityID);
+            resources.resources[static_cast<u8>(EntityResourceType::HEALTH)] = 123456.f;
 
             std::shared_ptr<Bytebuffer> packetBuffer = nullptr;
             if (PacketWriter::SMSG_CREATE_PLAYER(packetBuffer, entityID, gameEntity, transform))
+            {
+                connection.AddPacket(packetBuffer, PacketPriority::IMMEDIATE);
+            }
+
+            // TODO Testing
+            if (PacketWriter::SMSG_ENTITY_RESOURCES_UPDATE(packetBuffer, entityID, resources))
             {
                 connection.AddPacket(packetBuffer, PacketPriority::IMMEDIATE);
             }

@@ -5,7 +5,7 @@
 struct DBSingleton
 {
 public:
-    DBSingleton() : auth(2) { }
+    DBSingleton() : auth() { }
 
     DBConnection auth;
 };
