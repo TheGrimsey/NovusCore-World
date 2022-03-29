@@ -45,10 +45,10 @@ void SpawnPlayerSystem::Update(entt::registry& registry)
             GameEntity& gameEntity = registry.emplace<GameEntity>(entityID, GameEntity::Type::Player, 29344);
             registry.emplace<TransformIsDirty>(entityID);
             registry.emplace<GameEntityPlayerFlag>(entityID);
+
             EntityResources& resources = registry.emplace<EntityResources>(entityID);
             resources.resources[static_cast<u8>(EntityResourceType::HEALTH)] = 100.f;
             resources.resourcesMax[static_cast<u8>(EntityResourceType::HEALTH)] = 400.f;
-
             resources.resources[static_cast<u8>(EntityResourceType::MANA)] = 100.f;
             resources.resourcesMax[static_cast<u8>(EntityResourceType::MANA)] = 400.f;
 

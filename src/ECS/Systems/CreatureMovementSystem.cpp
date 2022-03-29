@@ -22,9 +22,9 @@ void CreatureMovementSystem::Update(entt::registry& registry)
     if (entityView.size_hint() == 0)
         return;
 
-    entityView.each([&](const auto entity, Transform& transform, GameEntity& gameEntity)
-    {
-        transform.position.z += 0.05f; // This is not right.
-    });
-    registry.insert<TransformIsDirty>(entityView.begin(), entityView.end());
+    //entityView.each([&](const auto entity, Transform& transform, GameEntity& gameEntity)
+    //{
+    //    transform.position.z += 0.05f; // This is not right.
+    //});
+    //registry.insert<TransformIsDirty>(entityView.begin(), entityView.end());
 }
