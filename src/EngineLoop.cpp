@@ -216,10 +216,10 @@ void EngineLoop::SetupUpdateFramework()
 
     // CreatePlayerTreeSystem
     tf::Task creatureMovementSystemTask = framework.emplace([&registry]()
-        {
-            ZoneScopedNC("CreatureMovementSystem::Update", tracy::Color::Blue2);
-            CreatureMovementSystem::Update(registry);
-        });
+    {
+        ZoneScopedNC("CreatureMovementSystem::Update", tracy::Color::Blue2);
+        CreatureMovementSystem::Update(registry);
+    });
     creatureMovementSystemTask.gather(spawnPlayerSystemTask);
 
     // UpdateEntityPositionSystem

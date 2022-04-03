@@ -47,10 +47,10 @@ void SpawnPlayerSystem::Update(entt::registry& registry)
             registry.emplace<GameEntityPlayerFlag>(entityID);
 
             EntityResources& resources = registry.emplace<EntityResources>(entityID);
-            resources.resources[static_cast<u8>(EntityResourceType::HEALTH)] = 100.f;
-            resources.resourcesMax[static_cast<u8>(EntityResourceType::HEALTH)] = 400.f;
-            resources.resources[static_cast<u8>(EntityResourceType::MANA)] = 100.f;
-            resources.resourcesMax[static_cast<u8>(EntityResourceType::MANA)] = 400.f;
+            resources.current[static_cast<u8>(EntityResourceType::HEALTH)] = 100.f;
+            resources.max[static_cast<u8>(EntityResourceType::HEALTH)] = 400.f;
+            resources.current[static_cast<u8>(EntityResourceType::MANA)] = 100.f;
+            resources.max[static_cast<u8>(EntityResourceType::MANA)] = 400.f;
 
             std::shared_ptr<Bytebuffer> packetBuffer = nullptr;
             if (PacketWriter::SMSG_CREATE_PLAYER(packetBuffer, entityID, gameEntity, transform))

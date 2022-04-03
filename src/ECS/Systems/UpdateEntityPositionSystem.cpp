@@ -77,12 +77,12 @@ void UpdateEntityPositionSystem::Update(entt::registry& registry)
             std::shared_ptr<Bytebuffer> packetBuffer = nullptr;
             if (PacketWriter::SMSG_UPDATE_ENTITY(packetBuffer, entity, transform))
             {
-                for (entt::entity seenEntity : seenEntities)
+                for (u32 i = 0; i < seenEntities.size(); i++)
                 {
-                    if (!registry.valid(seenEntity) || !registry.all_of<GameEntityPlayerFlag>(seenEntity))
+                    if (!registry.valid(seenEntities[i]) || !registry.all_of<GameEntityPlayerFlag>(seenEntities[i]))
                         continue;
 
-                    ConnectionComponent& seenConnection = registry.get<ConnectionComponent>(seenEntity);
+                    ConnectionComponent& seenConnection = registry.get<ConnectionComponent>(seenEntities[i]);
                     seenConnection.AddPacket(packetBuffer, PacketPriority::IMMEDIATE);
                 }
             }
