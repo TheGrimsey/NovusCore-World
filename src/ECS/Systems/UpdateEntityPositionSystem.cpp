@@ -79,10 +79,11 @@ void UpdateEntityPositionSystem::Update(entt::registry& registry)
             {
                 for (u32 i = 0; i < seenEntities.size(); i++)
                 {
-                    if (!registry.valid(seenEntities[i]) || !registry.all_of<GameEntityPlayerFlag>(seenEntities[i]))
+                    entt::entity seenEntity = seenEntities[i];
+                    if (!registry.valid(seenEntity) || !registry.all_of<GameEntityPlayerFlag>(seenEntity))
                         continue;
 
-                    ConnectionComponent& seenConnection = registry.get<ConnectionComponent>(seenEntities[i]);
+                    ConnectionComponent& seenConnection = registry.get<ConnectionComponent>(seenEntity);
                     seenConnection.AddPacket(packetBuffer, PacketPriority::IMMEDIATE);
                 }
             }
