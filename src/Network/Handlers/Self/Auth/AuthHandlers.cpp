@@ -73,7 +73,7 @@ namespace InternalSocket
         std::shared_ptr<Bytebuffer> buffer = Bytebuffer::Borrow<128>();
         buffer->Put(Opcode::CMSG_CONNECTED);
         buffer->PutU16(8);
-        buffer->Put(AddressType::REGION);
+        buffer->Put(AddressType::WORLD);
         buffer->PutU8(0);
 
         const NetSocket::ConnectionInfo& connectionInfo = connectionDeferredSingleton.netServer->GetSocket()->GetConnectionInfo();
