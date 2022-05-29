@@ -18,6 +18,7 @@
 
 // Systems
 #include "ECS/Systems/SpawnPlayerSystem.h"
+#include "ECS/Systems/CreatureMovementSystem.h"
 #include "ECS/Systems/UpdateEntityPositionSystem.h"
 #include "ECS/Systems/CreatePlayerTreeSystem.h"
 #include "ECS/Systems/Network/ConnectionSystems.h"
@@ -213,13 +214,21 @@ void EngineLoop::SetupUpdateFramework()
         SpawnPlayerSystem::Update(registry);
     });
 
+    // CreatePlayerTreeSystem
+    tf::Task creatureMovementSystemTask = framework.emplace([&registry]()
+    {
+        ZoneScopedNC("CreatureMovementSystem::Update", tracy::Color::Blue2);
+        CreatureMovementSystem::Update(registry);
+    });
+    creatureMovementSystemTask.gather(spawnPlayerSystemTask);
+
     // UpdateEntityPositionSystem
     tf::Task updateEntityPositionSystemTask = framework.emplace([&registry]()
     {
         ZoneScopedNC("UpdateEntityPositionSystem::Update", tracy::Color::Blue2);
         UpdateEntityPositionSystem::Update(registry);
     });
-    updateEntityPositionSystemTask.gather(spawnPlayerSystemTask);
+    updateEntityPositionSystemTask.gather(creatureMovementSystemTask);
 
     // ConnectionUpdateSystem
     tf::Task connectionUpdateSystemTask = framework.emplace([&registry]()

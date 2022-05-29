@@ -36,8 +36,10 @@ struct MapSingleton
 
 	Terrain::Map& GetCurrentMap() { return _currentMap; }
 	Tree2D& GetPlayerTree() { return _playerTree; };
+	Tree2D& GetEntityTree() { return _entityTree; };
 
 private:
 	Terrain::Map _currentMap;
 	Tree2D _playerTree;
+	Tree2D _entityTree;
 };

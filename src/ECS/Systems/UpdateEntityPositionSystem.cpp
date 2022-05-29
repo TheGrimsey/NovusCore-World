@@ -10,33 +10,31 @@
 #include <Gameplay/Network/PacketWriter.h>
 #include <Gameplay/ECS/Components/Transform.h>
 #include <Gameplay/ECS/Components/GameEntity.h>
-
+#include <Gameplay/ECS/Components/GameEntityPlayerFlag.h>
 
 void UpdateEntityPositionSystem::Update(entt::registry& registry)
 {
-    auto modelView = registry.view<Transform, GameEntity>();
-    if (modelView.size_hint() == 0)
+    auto playerView = registry.view<Transform, GameEntity, GameEntityPlayerFlag>();
+    if (playerView.size_hint() == 0)
         return;
 
-    MapSingleton& mapSingleton = registry.ctx<MapSingleton>();
-    modelView.each([&](const auto entity, Transform& transform, GameEntity& gameEntity)
-    {
-        if (gameEntity.type != GameEntity::Type::Player)
-            return;
 
-        std::vector<Point2D> playersWithinDistance;
-        Tree2D& entityTress = mapSingleton.GetPlayerTree();
-        if (!entityTress.GetWithinDistance({transform.position.x, transform.position.y}, 500.f, entity, playersWithinDistance))
+    MapSingleton& mapSingleton = registry.ctx<MapSingleton>();
+    playerView.each([&](const auto entity, Transform& transform, GameEntity& gameEntity)
+    {
+        std::vector<Point2D> entitiesWithinDistance;
+        Tree2D& entityTree = mapSingleton.GetEntityTree();
+        if (!entityTree.GetWithinDistance({transform.position.x, transform.position.y}, SyncDistance, entity, entitiesWithinDistance))
             return;
 
         std::vector<entt::entity>& seenEntities = gameEntity.seenEntities;
-        if (seenEntities.size() == 0 && playersWithinDistance.size() == 0)
+        if (seenEntities.size() == 0 && entitiesWithinDistance.size() == 0)
             return;
 
-        std::vector<entt::entity> newlySeenEntities(playersWithinDistance.size());
-        for (u32 i = 0; i < playersWithinDistance.size(); i++)
+        std::vector<entt::entity> newlySeenEntities(entitiesWithinDistance.size());
+        for (u32 i = 0; i < entitiesWithinDistance.size(); i++)
         {
-            newlySeenEntities[i] = playersWithinDistance[i].GetPayload();
+            newlySeenEntities[i] = entitiesWithinDistance[i].GetPayload();
         }
 
         ConnectionComponent& connection = registry.get<ConnectionComponent>(entity);
@@ -73,7 +71,7 @@ void UpdateEntityPositionSystem::Update(entt::registry& registry)
             }
         }
 
-        // Send Movement Updates to seenEntities
+        // Send our Movement Updates to other players.
         if (seenEntities.size() > 0 && registry.all_of<TransformIsDirty>(entity))
         {
             std::shared_ptr<Bytebuffer> packetBuffer = nullptr;
@@ -81,13 +79,8 @@ void UpdateEntityPositionSystem::Update(entt::registry& registry)
             {
                 for (u32 i = 0; i < seenEntities.size(); i++)
                 {
-                    entt::entity& seenEntity = seenEntities[i];
-
-                    if (!registry.valid(seenEntity))
-                        continue;
-
-                    const GameEntity& seenGameEntity = registry.get<GameEntity>(seenEntity);
-                    if (seenGameEntity.type != GameEntity::Type::Player)
+                    entt::entity seenEntity = seenEntities[i];
+                    if (!registry.valid(seenEntity) || !registry.all_of<GameEntityPlayerFlag>(seenEntity))
                         continue;
 
                     ConnectionComponent& seenConnection = registry.get<ConnectionComponent>(seenEntity);
@@ -127,4 +120,43 @@ void UpdateEntityPositionSystem::Update(entt::registry& registry)
             //DebugHandler::PrintSuccess("Finished Preparing Data for Player (%u)", entt::to_integral(entity));
         }
     });
+
+    auto entityView = registry.view<Transform, GameEntity, TransformIsDirty>(entt::exclude_t<GameEntityPlayerFlag>());
+    if (entityView.size_hint() == 0)
+        return;
+
+    entityView.each([&](const auto entity, Transform& transform, GameEntity& gameEntity)
+    {
+        std::vector<Point2D> playersWithinDistance;
+        Tree2D& playerTree = mapSingleton.GetPlayerTree();
+        if (!playerTree.GetWithinDistance({ transform.position.x, transform.position.y }, SyncDistance, entity, playersWithinDistance))
+            return;
+
+        // TODO: We should not be sending these to newlySeenEntities as they just got the create packet.
+        std::vector<entt::entity>& seenEntities = gameEntity.seenEntities;
+        if (seenEntities.size() == 0 && playersWithinDistance.size() == 0)
+            return;
+        seenEntities.resize(playersWithinDistance.size());
+
+        for (u32 i = 0; i < playersWithinDistance.size(); i++)
+        {
+            seenEntities[i] = playersWithinDistance[i].GetPayload();
+        }
+
+        std::shared_ptr<Bytebuffer> packetBuffer = nullptr;
+        if (PacketWriter::SMSG_UPDATE_ENTITY(packetBuffer, entity, transform))
+        {
+            for (entt::entity seenEntity : seenEntities)
+            {
+                if (!registry.valid(seenEntity) || !registry.all_of<GameEntityPlayerFlag>(seenEntity))
+                    continue;
+
+                ConnectionComponent& seenConnection = registry.get<ConnectionComponent>(seenEntity);
+                seenConnection.AddPacket(packetBuffer, PacketPriority::IMMEDIATE);
+            }
+        }
+    });
+
+    // Testing
+    registry.clear<TransformIsDirty>();
 }
