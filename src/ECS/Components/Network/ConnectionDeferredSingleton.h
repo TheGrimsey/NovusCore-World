@@ -1,8 +1,9 @@
 #pragma once
 #include <NovusTypes.h>
 #include <Utils/ConcurrentQueue.h>
-#include <Networking/NetClient.h>
-#include <Networking/NetServer.h>
+
+class NetServer;
+class NetClient;
 
 struct ConnectionDeferredSingleton
 {

@@ -28,8 +28,9 @@
 #include <Utils/Message.h>
 #include <Utils/StringUtils.h>
 #include <Utils/ConcurrentQueue.h>
-#include <Networking/NetClient.h>
-#include <Networking/NetServer.h>
+
+class NetClient;
+class NetServer;
 
 namespace tf
 {

@@ -1,4 +1,5 @@
 #include "GeneralHandlers.h"
+#include <sstream>
 #include <Networking/NetStructures.h>
 #include <Networking/NetPacket.h>
 #include <Networking/NetClient.h>

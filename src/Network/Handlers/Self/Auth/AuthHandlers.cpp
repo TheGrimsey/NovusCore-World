@@ -3,6 +3,7 @@
 #include <Networking/NetStructures.h>
 #include <Networking/NetPacket.h>
 #include <Networking/NetClient.h>
+#include <Networking/NetServer.h>
 #include <Networking/NetPacketHandler.h>
 #include <Utils/ByteBuffer.h>
 #include "../../../../Utils/ServiceLocator.h"

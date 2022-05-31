@@ -1,7 +1,8 @@
 #pragma once
 #include <NovusTypes.h>
-#include <Networking/NetClient.h>
 #include <Utils/ConcurrentQueue.h>
+
+class NetClient;
 
 struct SpawnPlayerRequest
 {

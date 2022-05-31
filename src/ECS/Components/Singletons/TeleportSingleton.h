@@ -1,6 +1,5 @@
 #pragma once
 #include <NovusTypes.h>
-#include <vector>
 #include <robin_hood.h>
 
 #include "../../../Gameplay/Map/TeleportLocations.h"

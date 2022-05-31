@@ -1,6 +1,8 @@
 #include "AuthHandlers.h"
 #include <entt.hpp>
+#include <sstream>
 #include <Database/DBConnection.h>
+#include <Database/mysql/QueryResult.h>
 #include <Networking/NetStructures.h>
 #include <Networking/NetPacket.h>
 #include <Networking/NetClient.h>

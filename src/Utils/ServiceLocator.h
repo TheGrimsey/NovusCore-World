@@ -24,8 +24,6 @@
 #pragma once
 #include <NovusTypes.h>
 #include <entt.hpp>
-#include <Utils/ConcurrentQueue.h>
-#include <Utils/Message.h>
 
 class NetPacketHandler;
 class ServiceLocator

@@ -24,7 +24,6 @@
 #pragma once
 #include <NovusTypes.h>
 #include <Containers/KDTree.h>
-#include <vector>
 #include "../../../Gameplay/Map/Map.h"
 
 typedef KDPoint<f32, entt::entity, 2> Point2D;

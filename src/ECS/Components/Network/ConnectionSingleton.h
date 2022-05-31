@@ -1,8 +1,9 @@
 #pragma once
 #include <NovusTypes.h>
 #include <Utils/ConcurrentQueue.h>
-#include <Networking/NetPacket.h>
-#include <Networking/NetClient.h>
+
+class NetClient;
+struct NetPacket;
 
 struct ConnectionSingleton
 {
